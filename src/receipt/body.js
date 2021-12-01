@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from "react";
+import React, { useContext, useRef, useEffect } from "react";
 import { formatEther } from "@ethersproject/units";
 import { styled } from "@mui/material/styles";
 import { withStyles } from "@mui/styles";
@@ -16,6 +16,7 @@ import "../index.css";
 import { NET_NAMES } from "../constant";
 import Icon from "react-crypto-icons";
 import "../index.css";
+import { CURRENCY_USD, OTHER_USD, CUR_NAME, transform } from "../constant";
 
 const CustomPaper = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -30,9 +31,11 @@ const NoBorderCell = withStyles({
   },
 })(TableCell);
 
-const Body = React.forwardRef(({ receiptData }, ref) => {
+const Body = React.forwardRef(({ receiptData, currency }, ref) => {
+  useEffect(() => {}, [currency]);
+
   return (
-    <Box p={1} pt={1} mb={2} ref={ref} >
+    <Box p={1} pt={1} mb={2} ref={ref}>
       <CustomPaper elevation={3} sx={{ minHeight: "1050px" }}>
         <div className="background">
           <img
@@ -156,22 +159,38 @@ const Body = React.forwardRef(({ receiptData }, ref) => {
             <Typography>Transferred Amount(USD)</Typography>
             <Typography>
               {receiptData.data.log_events.length == 0
-                ? parseFloat(formatEther(receiptData.data.value)).toFixed(3) +
-                  " ETH"
-                : receiptData.data.log_events[0].decoded.params[2].value.slice(
-                    0,
-                    -1 * receiptData.data.log_events[0].sender_contract_decimals
-                  ) +
-                  "." +
-                  receiptData.data.log_events[0].decoded.params[2].value.slice(
-                    -1 *
-                      receiptData.data.log_events[0].sender_contract_decimals,
-                    -1 *
-                      receiptData.data.log_events[0].sender_contract_decimals +
-                      3
-                  ) +
-                  " " +
-                  receiptData.data.log_events[0].sender_contract_ticker_symbol}
+                ? (
+                    parseFloat(formatEther(receiptData.data.value)) *
+                    CURRENCY_USD.eth *
+                    OTHER_USD[currency]
+                  ).toFixed(3) + CUR_NAME[currency]
+                : (parseFloat(
+                    receiptData.data.log_events[0].decoded.params[2].value.slice(
+                      0,
+                      -1 *
+                        receiptData.data.log_events[0].sender_contract_decimals
+                    ) +
+                      "." +
+                      receiptData.data.log_events[0].decoded.params[2].value.slice(
+                        -1 *
+                          receiptData.data.log_events[0]
+                            .sender_contract_decimals,
+                        -1 *
+                          receiptData.data.log_events[0]
+                            .sender_contract_decimals +
+                          3
+                      )
+                  ) *
+                    (CURRENCY_USD[
+                      receiptData.data.log_events[0].sender_contract_ticker_symbol.toLowerCase()
+                    ] || 1) *
+                    (CURRENCY_USD[
+                      receiptData.data.log_events[0].sender_contract_ticker_symbol.toLowerCase()
+                    ] ? OTHER_USD[currency]: 1)).toFixed(2) +
+                  (CURRENCY_USD[
+                    receiptData.data.log_events[0].sender_contract_ticker_symbol.toLowerCase()
+                  ] ? CUR_NAME[currency] : receiptData.data.log_events[0].sender_contract_ticker_symbol)
+                }
             </Typography>
           </Box>
 

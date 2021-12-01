@@ -48,15 +48,23 @@ export default function TranGen() {
       .get(`${COV_URI}/${netId}/transaction_v2/${txHash}/?key=${API_KEY}`)
       .then((res) => {
         //console.log("data", res.data.data)
-        setTxData(res.data.data.items[0]);
-        setDate(res.data.data.updated_at);
-        receiptData.setData({
-          ...res.data.data.items[0],
-          date: res.data.data.updated_at,
-          net: netId,
-        });
+        if (
+          res.data.data.items[0].log_events.length > 0 &&
+          res.data.data.items[0].log_events[0].sender_contract_ticker_symbol ==
+            null
+        )
+          window.alert("Wrong Coin");
+        else {
+          setTxData(res.data.data.items[0]);
+          setDate(res.data.data.updated_at);
+          receiptData.setData({
+            ...res.data.data.items[0],
+            date: res.data.data.updated_at,
+            net: netId,
+          });
+        }
       })
-      .catch((err) => window.alert(err.message));
+      .catch((err) => window.alert("Unable to get data"));
   };
 
   return (
@@ -154,7 +162,9 @@ export default function TranGen() {
                     txData.log_events[0].decoded.params[2].value.slice(
                       -1 * txData.log_events[0].sender_contract_decimals,
                       -1 * txData.log_events[0].sender_contract_decimals + 3
-                    )+" "+txData.log_events[0].sender_contract_ticker_symbol}
+                    ) +
+                    " " +
+                    txData.log_events[0].sender_contract_ticker_symbol}
               </Typography>
               <Button
                 variant="contained"
